@@ -15,8 +15,8 @@ let client; // Declare the MongoClient outside the middleware
 // Middleware to ensure MongoDB connection is established before handling requests
 app.use(async (req, res, next) => {
   try {
-    if (!client || !client.isConnected()) {
-      client = new MongoClient(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+    if (!client || (client.topology && client.topology.isConnected())) {
+      client = new MongoClient(mongoURI);
       await client.connect();
     }
     req.dbClient = client;
@@ -36,10 +36,8 @@ app.post("/compress", async (req, res) => {
   try {
     const { videoUrl } = req.body;
     
-    // Hypothetical function to compress the video using fluent-ffmpeg
     const compressedVideoPath = await compressVideo(videoUrl);
 
-    // Save the compressed video path to MongoDB
     const db = req.dbClient.db();
     const collection = db.collection("compressed_videos");
     await collection.insertOne({ path: compressedVideoPath });
