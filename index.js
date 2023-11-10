@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient } = require("mongodb"); 
+const { MongoClient } = require("mongodb");
 const cors = require("cors");
 const ffmpeg = require("fluent-ffmpeg");
 
@@ -10,13 +10,13 @@ app.use(cors());
 
 const mongoURI = "mongodb+srv://saurav9283:Saurav2002@cluster0.cccveve.mongodb.net/?retryWrites=true&w=majority";
 
-// Connect to MongoDB using MongoClient
-const client = new MongoClient(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+let client; // Declare the MongoClient outside the middleware
 
 // Middleware to ensure MongoDB connection is established before handling requests
 app.use(async (req, res, next) => {
   try {
-    if (!client.isConnected()) {
+    if (!client || !client.isConnected()) {
+      client = new MongoClient(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
       await client.connect();
     }
     req.dbClient = client;
@@ -25,6 +25,11 @@ app.use(async (req, res, next) => {
     console.error("Error connecting to MongoDB:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+// Home route
+app.get("/", (req, res) => {
+  res.send("Welcome to the Video Compression API");
 });
 
 app.post("/compress", async (req, res) => {
